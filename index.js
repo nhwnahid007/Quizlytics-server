@@ -62,7 +62,21 @@ async function run() {
       }
     });
 
-    
+    // API route for authenticating user with social provider
+    app.post('/authenticating_with_providers', async (req, res) => {
+      try {
+        const newUser = req.body;
+        const exist = await registeredUsersCollection.findOne({ email: newUser.email });
+        if (exist) {
+          return res.status(409).json({ message: "User already exist!" });
+        }
+        const response = await registeredUsersCollection.insertOne(newUser);
+        return res.status(200).json({ message: "New user successfully created!" })
+      } catch (error) {
+        return res.status(500).json({ message: "Internal Server Error", error });
+      }
+    })
+
 
 
     // Link Quiz History
