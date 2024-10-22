@@ -116,14 +116,34 @@ async function run() {
       const options = {projection: {
         _id:1,
         quizStartKey: 1,
-        questions: 0,
-        answers: 0,
+        quizTitle: 1,
+        quizCategory: 1,
+        quizCreator: 1,
         userName: 1,
         userEmail: 1,
         userImg: 1,
         marks: 1
       }}
-      const result = await userHistoryCollection.find().sort({marks: -1}).limit(5).toArray();
+      const result = await userHistoryCollection.find({}, options).sort({marks: -1}).limit(5).toArray();
+      res.send(result)
+    })
+    app.get("/allExaminee", async(req, res)=>{
+      const key = req.query.qKey;
+      const query = {
+        quizStartKey: key
+      }
+      const options = {projection: {
+        _id:1,
+        quizStartKey: 1,
+        quizTitle: 1,
+        quizCategory: 1,
+        quizCreator: 1,
+        userName: 1,
+        userEmail: 1,
+        userImg: 1,
+        marks: 1
+      }}
+      const result = await userHistoryCollection.find({}, options).sort({marks: -1}).toArray();
       res.send(result)
     })
 
