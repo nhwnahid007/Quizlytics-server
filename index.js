@@ -2,7 +2,7 @@ const express = require ("express");
 const cors = require ("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require ('dotenv').config();
-
+const bcrypt = require('bcrypt');
 const genAI = new GoogleGenerativeAI(process.env.AI_API_KEY)
 const app = express();
 const port = process.env.PORT || 4000;
@@ -38,11 +38,32 @@ async function run() {
     // await client.db("admin").command({ ping: 1 });
 
     const database = client.db("quizlyticsDb");
+    const registeredUsersCollection = database.collection('registered_users');
     const userHistoryCollection = database.collection("quizHistory");
     const userAiHistoryCollection = database.collection("aiQuizHistory");
     const manualQuizCollection = database.collection("manualQuiz");
     const feedbackCollection = database.collection("feedback")
     const userLinkHistoryCollection = database.collection("linkQuizHistory")
+
+
+    // API route for registering users with register form
+    app.post('/registered_users', async (req, res) => {
+      try {
+        const newUser = req.body;
+        const exist = await registeredUsersCollection.findOne({ email: newUser.email });
+        if (exist) {
+          return res.status(409).json({ message: "User already exists!" });
+        }
+        const hashedPassword = bcrypt.hashSync(newUser.password, 14);
+        const response = await registeredUsersCollection.insertOne({ ...newUser, password: hashedPassword });
+        return res.status(200).json({ message: "New user successfully created" });
+      } catch (error) {
+        return res.status(500).json({ message: "Internal Server Error", error });
+      }
+    });
+
+    
+
 
     // Link Quiz History
     app.post("/linkQuiz", async(req, res)=>{
