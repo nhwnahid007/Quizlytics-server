@@ -77,6 +77,25 @@ async function run() {
     })
 
 
+    // Get all user
+
+    app.get("/allUsers", async(req, res)=>{
+      const result = await registeredUsersCollection.find().toArray();
+      res.send(result)
+    })
+
+    // Get user role by email
+
+    app.get("/user/role", async(req, res)=>{
+      const user = req.query.email;
+      const query = {
+        email: user
+      };
+      const result = await registeredUsersCollection.findOne(query);
+      res.send(result.role)
+    })
+
+
     // Link Quiz History
     app.post("/linkQuiz", async (req, res) => {
       const userHistoryLinkByLink = req.body;
