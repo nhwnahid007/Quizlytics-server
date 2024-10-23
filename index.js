@@ -1,8 +1,8 @@
-const express = require ("express");
-const cors = require ("cors");
+const express = require("express");
+const cors = require("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-require ('dotenv').config();
-const bcrypt = require('bcrypt');
+require('dotenv').config();
+
 const genAI = new GoogleGenerativeAI(process.env.AI_API_KEY)
 const app = express();
 const port = process.env.PORT || 4000;
@@ -45,7 +45,6 @@ async function run() {
     const feedbackCollection = database.collection("feedback")
     const userLinkHistoryCollection = database.collection("linkQuizHistory")
 
-
     // API route for registering users with register form
     app.post('/registered_users', async (req, res) => {
       try {
@@ -54,7 +53,7 @@ async function run() {
         if (exist) {
           return res.status(409).json({ message: "User already exists!" });
         }
-        const hashedPassword = bcrypt.hashSync(newUser.password, 14);
+        const hashedPassword = newUser.password
         const response = await registeredUsersCollection.insertOne({ ...newUser, password: hashedPassword });
         return res.status(200).json({ message: "New user successfully created" });
       } catch (error) {
@@ -78,16 +77,15 @@ async function run() {
     })
 
 
-
     // Link Quiz History
-    app.post("/linkQuiz", async(req, res)=>{
+    app.post("/linkQuiz", async (req, res) => {
       const userHistoryLinkByLink = req.body;
       // console.log(userHistoryLinkByLink);
       const result = await userLinkHistoryCollection.insertOne(userHistoryLinkByLink);
       res.send(result)
     })
 
-    app.get("/linkHistoryByUser", async(req, res)=>{
+    app.get("/linkHistoryByUser", async (req, res) => {
       const user = req.query.email;
       const query = {
         userEmail: user
@@ -97,13 +95,13 @@ async function run() {
     })
 
     // Ai Quiz History
-    app.post("/saveAiQuiz", async(req, res)=>{
+    app.post("/saveAiQuiz", async (req, res) => {
       const userHistoryAi = req.body;
       const result = await userAiHistoryCollection.insertOne(userHistoryAi);
       res.send(result)
     })
 
-    app.get("/historyByUserAi", async(req, res)=>{
+    app.get("/historyByUserAi", async (req, res) => {
       const user = req.query.email;
       const qTitle = req.query.qTitle;
       const query = {
@@ -115,54 +113,58 @@ async function run() {
     })
 
     // Custom Quiz History
-    app.post("/saveHistory", async(req, res)=>{
-        const userHistory = req.body;
-        const result = await userHistoryCollection.insertOne(userHistory);
-        res.send(result)
-    })
-
-
-    app.get("/leaderboard", async(req, res)=>{
-      const key = req.query.qKey;
-      const query = {
-        quizStartKey: key
-      }
-      const options = {projection: {
-        _id:1,
-        quizStartKey: 1,
-        quizTitle: 1,
-        quizCategory: 1,
-        quizCreator: 1,
-        userName: 1,
-        userEmail: 1,
-        userImg: 1,
-        marks: 1
-      }}
-      const result = await userHistoryCollection.find({}, options).sort({marks: -1}).limit(5).toArray();
-      res.send(result)
-    })
-    app.get("/allExaminee", async(req, res)=>{
-      const key = req.query.qKey;
-      const query = {
-        quizStartKey: key
-      }
-      const options = {projection: {
-        _id:1,
-        quizStartKey: 1,
-        quizTitle: 1,
-        quizCategory: 1,
-        quizCreator: 1,
-        userName: 1,
-        userEmail: 1,
-        userImg: 1,
-        marks: 1
-      }}
-      const result = await userHistoryCollection.find({}, options).sort({marks: -1}).toArray();
+    app.post("/saveHistory", async (req, res) => {
+      const userHistory = req.body;
+      const result = await userHistoryCollection.insertOne(userHistory);
       res.send(result)
     })
 
 
-    app.get("/historyByKey", async(req, res)=>{
+    app.get("/leaderboard", async (req, res) => {
+      const key = req.query.qKey;
+      const query = {
+        quizStartKey: key
+      }
+      const options = {
+        projection: {
+          _id: 1,
+          quizStartKey: 1,
+          quizTitle: 1,
+          quizCategory: 1,
+          quizCreator: 1,
+          userName: 1,
+          userEmail: 1,
+          userImg: 1,
+          marks: 1
+        }
+      }
+      const result = await userHistoryCollection.find({}, options).sort({ marks: -1 }).limit(5).toArray();
+      res.send(result)
+    })
+    app.get("/allExaminee", async (req, res) => {
+      const key = req.query.qKey;
+      const query = {
+        quizStartKey: key
+      }
+      const options = {
+        projection: {
+          _id: 1,
+          quizStartKey: 1,
+          quizTitle: 1,
+          quizCategory: 1,
+          quizCreator: 1,
+          userName: 1,
+          userEmail: 1,
+          userImg: 1,
+          marks: 1
+        }
+      }
+      const result = await userHistoryCollection.find({}, options).sort({ marks: -1 }).toArray();
+      res.send(result)
+    })
+
+
+    app.get("/historyByKey", async (req, res) => {
       const key = req.query.qKey;
       const user = req.query.email
       const query = {
@@ -173,10 +175,10 @@ async function run() {
       res.send(result)
     })
 
-    app.get("/userHistory", async(req, res)=>{
+    app.get("/userHistory", async (req, res) => {
       const user = req.query?.email;
       const query = {
-        userEmail : user
+        userEmail: user
       }
       // console.log(user);
       const result = await userHistoryCollection.find(query).toArray();
@@ -184,19 +186,19 @@ async function run() {
     })
 
     // Custom Quiz
-    app.post("/saveManualQuiz", async(req, res)=>{
+    app.post("/saveManualQuiz", async (req, res) => {
       const quizSet = req.body;
       // console.log(quizSet);
       const result = await manualQuizCollection.insertOne(quizSet);
       res.send(result);
     })
 
-    app.get("/allCustomQuiz", async(req, res)=>{
+    app.get("/allCustomQuiz", async (req, res) => {
       const result = await manualQuizCollection.find().toArray();
       res.send(result)
     })
 
-    app.get("/getCustomQuizByKey", async(req, res)=>{
+    app.get("/getCustomQuizByKey", async (req, res) => {
       const key = req.query.qKey;
       const query = {
         quizStartKey: key
@@ -205,7 +207,7 @@ async function run() {
       res.send(result)
     })
 
-    app.delete("/deleteCustomQuiz", async(req, res)=>{
+    app.delete("/deleteCustomQuiz", async (req, res) => {
       const key = req.query.qKey;
       const query = {
         quizStartKey: key
@@ -215,13 +217,13 @@ async function run() {
     })
 
     // Feedback
-    app.post("/feedback", async(req, res)=>{
+    app.post("/feedback", async (req, res) => {
       const feedback = req.body;
       const result = await feedbackCollection.insertOne(feedback);
       res.send(result)
     })
 
-    app.get("/all-feedback", async(req, res)=>{
+    app.get("/all-feedback", async (req, res) => {
       const allFeedback = await feedbackCollection.find().toArray();
       res.send(allFeedback)
     })
@@ -238,13 +240,13 @@ run().catch(console.dir);
 
 
 
-app.get("/quiz", async(req, res)=>{
-    const category = req.query?.category;
-    const skill = req.query?.skill
-    const model = genAI.getGenerativeModel({model: "gemini-pro"});
+app.get("/quiz", async (req, res) => {
+  const category = req.query?.category;
+  const skill = req.query?.skill
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 
-const prompt = `
+  const prompt = `
 Generate a JSON array of exactly 10 unique multiple-choice questions based on the topic "${category}". Each question should be designed for a learner at the "${skill}" level and can feature formats like "fill in the blanks", "find the true statement", or similar types.
 
 Each question object must meet the following criteria:
@@ -259,27 +261,27 @@ The output should be only the JSON array without any additional commentary or he
 
 
 
-    
-    const result = await model.generateContent(prompt);
+
+  const result = await model.generateContent(prompt);
 
 
-    const response = await result.response;
+  const response = await result.response;
 
-    const text = await response.text();
-    
-    const cleanedText = text.replace(/\\\"/g, '"')          // Removes escaped quotes
+  const text = await response.text();
+
+  const cleanedText = text.replace(/\\\"/g, '"')          // Removes escaped quotes
     .replace(/```json/g, '')                                // Removes '```json' code block markers
     .replace(/```/g, '')                                    // Removes any other triple backticks
     .replace(/`/g, '')                                      // Removes single backticks
     .trim();
-    const jsonResult = JSON.parse(cleanedText);
-    res.json(jsonResult); 
+  const jsonResult = JSON.parse(cleanedText);
+  res.json(jsonResult);
 })
 
 
-app.get("/testByLink", async(req, res)=>{
+app.get("/testByLink", async (req, res) => {
   const link = req.query.link
-  const model = genAI.getGenerativeModel({model: "gemini-pro"});
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
   const prompt = `
 Generate a JSON array of maximum unique multiple-choice questions possible based on the article of provided "${link}". Each question should feature formats like "fill in the blanks", "find the true statement", or similar types.
 
@@ -293,29 +295,29 @@ Each question object must meet the following criteria:
 The output should be only the JSON array without any additional commentary or headings.
 `
 
-// console.log(prompt);
+  // console.log(prompt);
 
-const result = await model.generateContent(prompt);
+  const result = await model.generateContent(prompt);
 
 
-const response = await result.response;
+  const response = await result.response;
 
-const text = await response.text();
+  const text = await response.text();
 
-const cleanedText = text.replace(/\\\"/g, '"')          // Removes escaped quotes
-.replace(/```json/g, '')                                // Removes '```json' code block markers
-.replace(/```/g, '')                                    // Removes any other triple backticks
-.replace(/`/g, '')                                      // Removes single backticks
-.trim();
-const jsonResult = JSON.parse(cleanedText);
-res.json(jsonResult); 
+  const cleanedText = text.replace(/\\\"/g, '"')          // Removes escaped quotes
+    .replace(/```json/g, '')                                // Removes '```json' code block markers
+    .replace(/```/g, '')                                    // Removes any other triple backticks
+    .replace(/`/g, '')                                      // Removes single backticks
+    .trim();
+  const jsonResult = JSON.parse(cleanedText);
+  res.json(jsonResult);
 })
 
 
-app.get("/", (req, res)=>{
-    res.send("Updated Quiz server is running")
+app.get("/", (req, res) => {
+  res.send("Updated Quiz server is running")
 })
 
-app.listen(port, ()=>{
-    console.log(`Listening to the port: ${port}`)
+app.listen(port, () => {
+  console.log(`Listening to the port: ${port}`)
 })
