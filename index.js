@@ -79,20 +79,60 @@ async function run() {
 
     // Get all user
 
-    app.get("/allUsers", async(req, res)=>{
+    app.get("/allUsers", async (req, res) => {
       const result = await registeredUsersCollection.find().toArray();
       res.send(result)
     })
 
     // Get user role by email
 
-    app.get("/user/role", async(req, res)=>{
+    app.get("/user/role", async (req, res) => {
       const user = req.query.email;
       const query = {
         email: user
       };
       const result = await registeredUsersCollection.findOne(query);
-      res.send(result.role)
+      res.send(result)
+    })
+
+    // Delete a user
+    app.delete("/deleteUser", async(req, res)=>{
+      const user = req.query.email;
+      const query = {
+        email: user
+      }
+      const result = await registeredUsersCollection.deleteOne(query);
+      res.send(result)
+    })
+
+    // Upgrade user to teacher
+    app.patch("/user/teacher", async(req, res)=>{
+      const user = req.query.email;
+      const filter = {
+        email: user
+      }
+      const updatedDoc = {
+        $set:{
+          role: "teacher"
+        }
+      }
+      const result = await registeredUsersCollection.updateOne(filter, updatedDoc);
+      res.send(result)
+    })
+
+    // Upgrade user to admin
+    app.patch("/user/admin", async(req, res)=>{
+      const user = req.query.email;
+      const filter = {
+        email: user
+      }
+      const updatedDoc = {
+        $set: {
+          role: "admin"
+        }
+      }
+      const result = await registeredUsersCollection.updateOne(filter, updatedDoc);
+      res.send(result)
     })
 
 
