@@ -105,34 +105,25 @@ async function run() {
       res.send(result)
     })
 
-    // Upgrade user to teacher
-    app.patch("/user/teacher", async(req, res)=>{
-      const user = req.query.email;
-      const filter = {
-        email: user
-      }
-      const updatedDoc = {
-        $set:{
-          role: "teacher"
-        }
-      }
-      const result = await registeredUsersCollection.updateOne(filter, updatedDoc);
-      res.send(result)
-    })
 
-    // Upgrade user to admin
-    app.patch("/user/admin", async(req, res)=>{
-      const user = req.query.email;
+    // Change user role by email
+    app.patch("/user/genUser", async(req, res)=>{
+      const {email, role} = req.body;
       const filter = {
-        email: user
+        email: email
       }
       const updatedDoc = {
         $set: {
-          role: "admin"
+          role: role
         }
       }
-      const result = await registeredUsersCollection.updateOne(filter, updatedDoc);
-      res.send(result)
+      try {
+        const result = await registeredUsersCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating user:", error);
+        res.status(500).send({ message: "Failed to update user role" });
+      }
     })
 
 
