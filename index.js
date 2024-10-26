@@ -107,7 +107,7 @@ async function run() {
 
 
     // Change user role by email
-    app.patch("/user/genUser", async(req, res)=>{
+    app.patch("/updateUserRole", async(req, res)=>{
       const {email, role} = req.body;
       const filter = {
         email: email
