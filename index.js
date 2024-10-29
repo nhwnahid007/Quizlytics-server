@@ -42,8 +42,10 @@ async function run() {
     const userHistoryCollection = database.collection("quizHistory");
     const userAiHistoryCollection = database.collection("aiQuizHistory");
     const manualQuizCollection = database.collection("manualQuiz");
-    const feedbackCollection = database.collection("feedback")
-    const userLinkHistoryCollection = database.collection("linkQuizHistory")
+    const feedbackCollection = database.collection("feedback");
+    const userLinkHistoryCollection = database.collection("linkQuizHistory");
+    const blogCollection = database.collection("allBlogs");
+    const paymentHistoryCollection = database.collection("allPayments")
 
     // API route for registering users with register form
     app.post('/registered_users', async (req, res) => {
@@ -277,6 +279,88 @@ async function run() {
       const allFeedback = await feedbackCollection.find().toArray();
       res.send(allFeedback)
     })
+
+    // Blogs
+
+    app.post("/blog", async(req, res)=>{
+      const myBlog = req.body;
+      const result = await blogCollection.insertOne(myBlog);
+      res.send(result);
+    })
+
+    app.get("/allBlogs", async(req, res)=>{
+      const result = await blogCollection.find().toArray();
+      res.send(result)
+    })
+
+    // Payment
+
+    app.post("/paymentHistory", async (req, res) => {
+      const paymentInfo = req.body;
+      const email = paymentInfo.email;
+    
+      // Query to match the document in registeredUsersCollection by email
+      const query = { userEmail: email };
+    
+      // Update document structure to set userStatus to "Pro"
+      const updatedDoc = {
+        $set: {
+          userStatus: "Pro"
+        }
+      };
+    
+      try {
+        // Insert and update operations
+        const insertOperation = paymentHistoryCollection.insertOne(paymentInfo);
+        const updateOperation = registeredUsersCollection.updateOne(query, updatedDoc);
+    
+        // Execute both operations simultaneously
+        const [insertResult, updateResult] = await Promise.all([insertOperation, updateOperation]);
+    
+        // Send response with both results
+        res.send({ insertResult, updateResult });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+    
+
+
+    app.get("/paidUser", async (req, res) => {
+      const userEmail = req.query.email;
+    
+      // Check if email is provided
+      if (!userEmail) {
+        return res.status(400).send({ message: "Email query parameter is required" });
+      }
+    
+      const query = { userEmail };
+    
+      try {
+        const result = await paymentHistoryCollection.findOne(query);
+    
+        if (result) {
+          res.send(result);
+        } else {
+          res.status(404).send({ message: "User not found in payment database!" });
+        }
+      } catch (error) {
+        console.error("Error getting paid user:", error);
+        res.status(500).send({ message: "An error occurred while retrieving the user" });
+      }
+    });
+    
+
+    app.get("/allPaidUserInfo", async (req, res) => {
+      try {
+        const result = await paymentHistoryCollection.find().toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        console.error("Error retrieving all paid user information:", error);
+        res.status(500).send({ message: "An error occurred while retrieving paid user information" });
+      }
+    });
+    
 
 
 
